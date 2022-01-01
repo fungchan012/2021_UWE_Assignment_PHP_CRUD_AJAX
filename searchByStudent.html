@@ -1,0 +1,51 @@
+<html>
+
+<script>
+var request = new XMLHttpRequest();
+
+function startSearch() {
+	var staffStudentId 
+		= document.getElementById("idinput").value;
+		
+	var url 
+		= "http://localhost/SampleUI/index.php/vaccine/student/" + staffStudentId;
+		
+	request.open("GET", url, true);
+	
+	request.onreadystatechange = updatePage;  // callback
+	
+	request.send(null);
+}
+
+function updatePage() {
+	if (request.readyState==4) {
+		if (request.status==200) {
+			var serverData = request.responseText;
+			var area = 
+				document.getElementById("displayArea");
+			//area.innerHTML = serverData;	
+
+			var resultArray = JSON.parse(serverData);
+			var html = "<ul>"
+			html += "<li>" + resultArray[0]["staffStudentId"];
+			html += "<li>" + resultArray[0]["staffStudentName"];
+			html += "<li>" + resultArray[0]["campusId"];
+			html += "<li>" + resultArray[0]["scheduleDate"];
+			
+			area.innerHTML = html;
+		}
+	}	
+}
+
+</script>
+
+<body>
+
+By ID: <input type=text id="idinput">
+<button onclick="startSearch()">Search</button>
+
+<div id="displayArea"></div>
+
+</body>
+
+</html>

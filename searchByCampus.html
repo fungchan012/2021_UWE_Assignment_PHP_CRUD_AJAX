@@ -1,0 +1,363 @@
+<html>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+	integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+<link href="dropdown.css" rel="stylesheet">
+
+<head>
+	<style>
+		h1 {
+			text-align: center;
+		}
+	</style>
+	<h1>BBQ Record System</h1>
+</head>
+
+<script>
+	var request = new XMLHttpRequest();
+	var html;
+	var resultArray;
+
+	//http://localhost/SampleUI/searchByCampus.html
+
+
+	function goCreate() {
+		var district = document.getElementById("addDistrict").value;
+		var name = document.getElementById("addName").value;
+		var address = document.getElementById("addAddress").value;
+		var url = "http://localhost/SampleUI/index.php/booking/createRecord/" + district
+			+ "/" + name + "/" + address;
+		request.open("POST", url, true);
+		request.onreadystatechange = showCreateResult;
+		request.send(null);
+	}
+
+	function showCreateResult() {
+		if (request.readyState == 4) {
+			if (request.status == 200) {
+				var serverData = request.responseText;
+				alert(serverData);
+				document.getElementById('CreationForm').reset();
+				startSearch();
+			}
+		}
+	}
+
+
+	function startSearch() {
+		var district = document.getElementById("district").value;
+
+		var url = "http://localhost/SampleUI/index.php/booking/district/" + district;
+
+		request.open("GET", url, true);
+
+		request.onreadystatechange = updatePage;  // callback
+
+		request.send(null);
+	}
+
+	function updatePage() {
+		if (request.readyState == 4) {
+			if (request.status == 200) {
+				var serverData = request.responseText;
+				console.log(serverData);
+				var area = document.getElementById("displayArea");
+				//area.innerHTML = serverData;	
+				resultArray = JSON.parse(serverData);
+				html = '<table class="table table-hover">';
+				html += "<tr><th>ID</th><th>District</th><th>Name</th><th>Address</th></tr>";
+				resultArray.forEach(showRecord);
+				html += "</table>";
+				area.innerHTML = html;
+			}
+		}
+	}
+
+	function showRecord(record) {
+		html += "<tr>";
+		html += "<td>" + record['id'];
+		html += "<td>" + record['district'];
+		html += "<td>" + record['name'];
+		html += "<td>" + record['address'];
+		html += "<td><img src='pen.png' width=30 ";
+		html += 'data-bs-toggle="modal" ';
+		html += 'data-bs-target="#updateModal" ';
+		html += "onclick='setUpdateModal(";
+		html += record['id'];
+		html += ")'>";
+		html += "</td>";
+		html += "<td><img src='bin.jpg' width=30 ";
+		html += 'data-bs-toggle="modal" ';
+		html += 'data-bs-target="#confirmDeleteModal" ';
+		html += "onclick='setConfirmDeleteModal(";
+		html += record['id'];
+		html += ")'>";
+		html += "</td>";
+		html += "</tr>";
+	}
+
+
+	function setUpdateModal(id) {
+		for (item of resultArray) {
+			if (item['id'] == id) {
+				district = item['district'];
+				name = item['name'];
+				address = item['address'];
+				break;
+			}
+		}
+		document.getElementById("updateId").value = id;
+		document.getElementById("updateDistrict").value = district;
+		document.getElementById("updateName").value = name;
+		document.getElementById("updateAddress").value = address;
+	}
+
+	function goUpdate() {
+		var id = document.getElementById("updateId").value;
+		var district = document.getElementById("updateDistrict").value;
+		var name = document.getElementById("updateName").value;
+		var address = document.getElementById("updateAddress").value;
+		var url = "http://localhost/SampleUI/index.php/booking/updateRecord/" + id
+		+ "/" + district + "/" + name + "/" + address;
+		request.open("PUT", url, true);
+		request.onreadystatechange = showUpdateResult;
+		request.send(null);
+	}
+
+	function showUpdateResult() {
+		if (request.readyState == 4) {
+			if (request.status == 200) {
+				var serverData = request.responseText;
+				alert(serverData);
+				document.getElementById("btnModalCancel").click();
+				startSearch();
+			}
+		}
+	}
+
+	function setConfirmDeleteModal(id) {
+		for (item of resultArray) {
+			if (item['id'] == id) {
+				district = item['district'];
+				name = item['name'];
+				address = item['address'];
+				break;
+			}
+		}
+		document.getElementById("modalId").value = id;
+		document.getElementById("modalDistrict").value = district;
+		document.getElementById("modalName").value = name;
+		document.getElementById("modalAddress").value = address;
+	}
+
+
+	function goDelete() {
+		var id = document.getElementById("modalId").value;
+
+		var url = "http://localhost/SampleUI/index.php/booking/deleteRecord/" + id;
+
+		request.open("DELETE", url, true);
+
+		request.onreadystatechange = showDeleteResult;  // callback
+
+		request.send(null);
+	}
+
+
+	function showDeleteResult() {
+		if (request.readyState == 4) {
+			if (request.status == 200) {
+				var serverData = request.responseText;
+				// need to close the modal 
+				// need to call startSearch to bring list of booking updated
+				alert(serverData);
+				document.getElementById('btnModalCancel').click();
+				startSearch();
+			}
+		}
+	}
+
+	function myFunc(district) {
+		//alert(district);
+		var ele = document.getElementById("district");
+		ele.value = district;
+	}
+</script>
+
+<body>
+
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
+		integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
+		integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
+		crossorigin="anonymous"></script>
+
+
+	<div class="d-flex gap-5 justify-content-center" id="dropdownFilter">
+		<div class="dropdown-menu pt-0 mx-0 rounded-3 shadow overflow-hidden" style="width: 280px;">
+
+			<form class="p-2 mb-2 bg-light border-bottom">
+				<div class="input-group mb-3">
+					<input type="text" class="form-control" placeholder="Select a district..."
+						aria-describedby="basic-addon2" id="district">
+					<button type="button" class="btn btn-outline-secondary" onclick="startSearch()">Search</button>
+				</div>
+			</form>
+
+
+			<ul class="list-unstyled mb-0">
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Yuen Long')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;">
+						</span>
+						Yuen Long</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Sai Kung')">
+						<span class="d-inline-block bg-info rounded-circle"
+							style="width: .5em; height: .5em;"></span>
+						Sai Kung
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Sha Tin')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Sha Tin
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Southern')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Southern
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Tsuen Wan')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Tsuen Wan
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2"
+						href="javascript:myFunc('Wong Tai Sin')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Wong Tai Sin
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Islands')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Islands
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Tai Po')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Tai Po
+					</a></li>
+				<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:myFunc('Tsuen Wan')">
+						<span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+						Tsuen Wan
+					</a></li>
+			</ul>
+
+		</div>
+
+	</div>
+
+
+	<div id="displayArea"></div>
+
+
+
+	<!-- Modal for confirmation of deletion -->
+	<div class="modal fade" id="confirmDeleteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+		aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="confirmDeleteModalLabel">Please confirm deletion</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">ID</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="modalId" readonly>
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">District</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="modalDistrict"
+							readonly>
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">Name</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="modalName" readonly>
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">Address</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="modalAddress"
+							readonly>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+						id="btnModalCancel">Cancel</button>
+					<button type="button" class="btn btn-primary" onclick="goDelete()">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+	<!-- Modal for confirmation of update -->
+	<div class="modal fade" id="updateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+		aria-labelledby="setUpdateModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="setUpdateModalLabel">Update Record</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">ID</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="updateId" readonly>
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">District</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="updateDistrict">
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">Name</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="updateName">
+					</div>
+					<div class="input-group mb-3">
+						<span class="input-group-text" id="basic-addon1">Address</span>
+						<input type="text" class="form-control" aria-describedby="basic-addon1" id="updateAddress">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+						id="btnModalCancel">Cancel</button>
+					<button type="button" class="btn btn-primary" onclick="goUpdate()">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal for confirmation of create -->
+	<span class="d-block p-2 bg-warning bg-opacity-50 h5">
+		<a name="Creation">Create Record</a>
+	</span>
+	<form class="form-control must-validated bg-warning bg-opacity-25" id="CreationForm">
+		<div class="mb-3 row">
+			<label for="District" class="col-sm-2 col-form-label">District</label>
+			<input class="form-control" type="text" id="addDistrict" placeholder="District"
+				aria-label="default input example" required>
+		</div>
+		<div class="mb-3 row">
+			<label for="Name" class="col-sm-2 col-form-label">Name</label>
+			<input class="form-control" type="text" id="addName" placeholder="Name" aria-label="default input example"
+				required>
+		</div>
+		<div class="mb-3 row">
+			<label for="Address" class="col-sm-2 col-form-label">Address</label>
+			<input class="form-control" type="tel" id="addAddress" minlength="8" placeholder="Address"
+				aria-label="default input example" required>
+		</div>
+		<div class="d-grid gap-2">
+			<button class="btn btn-danger" type="reset">Reset</button>
+			<button class="btn btn-primary" type="submit" onclick="goCreate()">Create</button>
+		</div>
+	</form>
+	<span class="d-block p-2 bg-light h6"></span>
+</body>
+
+</html>
